@@ -6,6 +6,7 @@ const NAV_LINKS = [
   { href: "/", label: "Dashboard" },
   { href: "/systems", label: "Systems" },
   { href: "/pm-scheduler", label: "PM Scheduler" },
+  { href: "/probes", label: "Probes" },
 ];
 
 export default async function AppLayout({

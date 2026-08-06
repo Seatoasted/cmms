@@ -12,6 +12,7 @@ export default function SystemsClient() {
   const [error, setError] = useState("");
   const [editing, setEditing] = useState<System | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [search, setSearch] = useState("");
 
   async function loadSystems() {
     const supabase = createClient();
@@ -60,6 +61,12 @@ export default function SystemsClient() {
     loadSystems();
   }
 
+  const filteredSystems = search.trim()
+    ? systems.filter((system) =>
+        system.fo_number.toLowerCase().includes(search.trim().toLowerCase())
+      )
+    : systems;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -79,6 +86,14 @@ export default function SystemsClient() {
           Add System
         </button>
       </div>
+
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search by FO #..."
+        className="input max-w-xs"
+      />
 
       {error && (
         <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -107,14 +122,16 @@ export default function SystemsClient() {
                   Loading...
                 </td>
               </tr>
-            ) : systems.length === 0 ? (
+            ) : filteredSystems.length === 0 ? (
               <tr>
                 <td colSpan={8} className="px-4 py-6 text-center text-slate-500">
-                  No systems yet.
+                  {systems.length === 0
+                    ? "No systems yet."
+                    : "No systems match your search."}
                 </td>
               </tr>
             ) : (
-              systems.map((system) => (
+              filteredSystems.map((system) => (
                 <tr
                   key={system.id}
                   className="border-t border-slate-100 hover:bg-slate-50"

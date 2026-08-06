@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { PmRecord, SystemPmStatus } from "@/lib/supabase/types";
+import type { PmRecord, Probe, SystemPmStatus } from "@/lib/supabase/types";
 import { effectiveNextPmDue, isPmOverdue } from "@/lib/supabase/types";
 
 export default async function SystemProfilePage({
@@ -12,7 +12,7 @@ export default async function SystemProfilePage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const [{ data: system, error: systemError }, { data: records }] =
+  const [{ data: system, error: systemError }, { data: records }, { data: probeRows }] =
     await Promise.all([
       supabase.from("system_pm_status").select("*").eq("id", id).maybeSingle(),
       supabase
@@ -20,6 +20,7 @@ export default async function SystemProfilePage({
         .select("*")
         .eq("system_id", id)
         .order("scheduled_date", { ascending: false }),
+      supabase.from("probes").select("*").eq("system_id", id).order("probe_serial"),
     ]);
 
   if (systemError || !system) {
@@ -28,6 +29,7 @@ export default async function SystemProfilePage({
 
   const row = system as SystemPmStatus;
   const pmRecords = (records ?? []) as PmRecord[];
+  const probes = (probeRows ?? []) as Probe[];
   const overdue = isPmOverdue(row);
 
   return (
@@ -136,6 +138,44 @@ export default async function SystemProfilePage({
                   <td className="px-5 py-2 text-slate-600">{record.status}</td>
                   <td className="px-5 py-2 text-slate-600">
                     {record.findings}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      <div className="rounded-lg border border-slate-200 bg-white">
+        <div className="border-b border-slate-200 px-5 py-4">
+          <h2 className="text-sm font-medium text-slate-700">
+            Assigned Probes
+          </h2>
+        </div>
+        {probes.length === 0 ? (
+          <p className="px-5 py-6 text-sm text-slate-500">
+            No probes assigned to this system.
+          </p>
+        ) : (
+          <table className="w-full text-left text-sm">
+            <thead className="text-xs text-slate-500">
+              <tr>
+                <th className="px-5 py-2 font-medium">Probe Serial</th>
+                <th className="px-5 py-2 font-medium">Type</th>
+                <th className="px-5 py-2 font-medium">Cases</th>
+                <th className="px-5 py-2 font-medium">Last Refurb</th>
+              </tr>
+            </thead>
+            <tbody>
+              {probes.map((probe) => (
+                <tr key={probe.id} className="border-t border-slate-100">
+                  <td className="px-5 py-2 font-medium text-slate-900">
+                    {probe.probe_serial}
+                  </td>
+                  <td className="px-5 py-2 text-slate-600">{probe.probe_type}</td>
+                  <td className="px-5 py-2 text-slate-600">{probe.cases}</td>
+                  <td className="px-5 py-2 text-slate-600">
+                    {formatDate(probe.last_refurb_date)}
                   </td>
                 </tr>
               ))}

@@ -34,6 +34,15 @@ export type SystemPmStatus = System & {
   next_pm_if_never_serviced: string | null;
 };
 
+export type Probe = {
+  id: string;
+  probe_serial: string;
+  probe_type: string | null;
+  cases: number | null;
+  last_refurb_date: string | null;
+  system_id: string | null;
+};
+
 export const SYSTEM_STATUS_OPTIONS = [
   "Active",
   "Down",
