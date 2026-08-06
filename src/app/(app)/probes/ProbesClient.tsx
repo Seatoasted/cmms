@@ -13,6 +13,7 @@ export default function ProbesClient() {
   const [error, setError] = useState("");
   const [editing, setEditing] = useState<Probe | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [search, setSearch] = useState("");
 
   async function loadProbes() {
     const supabase = createClient();
@@ -61,6 +62,12 @@ export default function ProbesClient() {
     loadProbes();
   }
 
+  const filteredProbes = search.trim()
+    ? probes.filter((probe) =>
+        probe.probe_serial.toLowerCase().includes(search.trim().toLowerCase())
+      )
+    : probes;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -80,6 +87,14 @@ export default function ProbesClient() {
           Add Probe
         </button>
       </div>
+
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search by probe serial..."
+        className="input max-w-xs"
+      />
 
       {error && (
         <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -106,14 +121,16 @@ export default function ProbesClient() {
                   Loading...
                 </td>
               </tr>
-            ) : probes.length === 0 ? (
+            ) : filteredProbes.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-4 py-6 text-center text-slate-500">
-                  No probes yet.
+                  {probes.length === 0
+                    ? "No probes yet."
+                    : "No probes match your search."}
                 </td>
               </tr>
             ) : (
-              probes.map((probe) => (
+              filteredProbes.map((probe) => (
                 <tr
                   key={probe.id}
                   className="border-t border-slate-100 hover:bg-slate-50"
