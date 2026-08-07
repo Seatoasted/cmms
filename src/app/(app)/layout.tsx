@@ -6,6 +6,7 @@ const NAV_LINKS = [
   { href: "/", label: "Dashboard" },
   { href: "/systems", label: "Systems" },
   { href: "/pm-scheduler", label: "PM Scheduler" },
+  { href: "/contract-scheduler", label: "Contract Scheduler" },
   { href: "/probes", label: "Probes" },
 ];
 
