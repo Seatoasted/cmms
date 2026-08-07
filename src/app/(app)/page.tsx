@@ -23,6 +23,17 @@ export default async function DashboardPage() {
   ).length;
   const notUnderContract = rows.length - underContract;
 
+  const now = new Date();
+  const dueThisMonth = rows.filter((row) => {
+    const due = effectiveNextPmDue(row);
+    if (!due) return false;
+    const dueDate = new Date(due);
+    return (
+      dueDate.getFullYear() === now.getFullYear() &&
+      dueDate.getMonth() === now.getMonth()
+    );
+  }).length;
+
   return (
     <div className="space-y-8">
       <div>
@@ -47,6 +58,7 @@ export default async function DashboardPage() {
         <StatCard label="Total Systems" value={rows.length} accent="text-slate-900" />
         <StatCard label="Under Contract" value={underContract} accent="text-slate-900" />
         <StatCard label="Not Under Contract" value={notUnderContract} accent="text-slate-900" />
+        <StatCard label="PMs Due This Month" value={dueThisMonth} accent="text-slate-900" />
         {Array.from(statusCounts.entries())
           .slice(0, 2)
           .map(([status, count]) => (
