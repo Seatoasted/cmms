@@ -24,6 +24,7 @@ export default function ContractSchedulerClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [editing, setEditing] = useState<System | null>(null);
+  const [search, setSearch] = useState("");
 
   async function load() {
     const supabase = createClient();
@@ -73,6 +74,12 @@ export default function ContractSchedulerClient() {
     })();
   }, []);
 
+  const filteredSystems = search.trim()
+    ? systems.filter((system) =>
+        system.fo_number.toLowerCase().includes(search.trim().toLowerCase())
+      )
+    : systems;
+
   return (
     <div className="space-y-6">
       <div>
@@ -84,6 +91,14 @@ export default function ContractSchedulerClient() {
           contacted for renewal.
         </p>
       </div>
+
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search by FO #..."
+        className="input max-w-xs"
+      />
 
       {error && (
         <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -111,14 +126,16 @@ export default function ContractSchedulerClient() {
                   Loading...
                 </td>
               </tr>
-            ) : systems.length === 0 ? (
+            ) : filteredSystems.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-4 py-6 text-center text-slate-500">
-                  No systems found.
+                  {systems.length === 0
+                    ? "No systems found."
+                    : "No systems match your search."}
                 </td>
               </tr>
             ) : (
-              systems.map((system) => {
+              filteredSystems.map((system) => {
                 const urgency = contractUrgency(system);
                 return (
                   <tr
