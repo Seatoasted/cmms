@@ -18,6 +18,11 @@ export default async function DashboardPage() {
     statusCounts.set(status, (statusCounts.get(status) ?? 0) + 1);
   }
 
+  const underContract = rows.filter(
+    (row) => row.contract_type && row.contract_type !== "None"
+  ).length;
+  const notUnderContract = rows.length - underContract;
+
   return (
     <div className="space-y-8">
       <div>
@@ -40,6 +45,8 @@ export default async function DashboardPage() {
           accent={overdue.length > 0 ? "text-red-600" : "text-emerald-600"}
         />
         <StatCard label="Total Systems" value={rows.length} accent="text-slate-900" />
+        <StatCard label="Under Contract" value={underContract} accent="text-slate-900" />
+        <StatCard label="Not Under Contract" value={notUnderContract} accent="text-slate-900" />
         {Array.from(statusCounts.entries())
           .slice(0, 2)
           .map(([status, count]) => (
