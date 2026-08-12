@@ -2,7 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { PmRecord, Probe, SystemPmStatus } from "@/lib/supabase/types";
-import { effectiveNextPmDue, isPmOverdue } from "@/lib/supabase/types";
+import {
+  effectiveNextPmDue,
+  isBiosBatteryDue,
+  isPmOverdue,
+} from "@/lib/supabase/types";
 
 export default async function SystemProfilePage({
   params,
@@ -12,16 +16,25 @@ export default async function SystemProfilePage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const [{ data: system, error: systemError }, { data: records }, { data: probeRows }] =
-    await Promise.all([
-      supabase.from("system_pm_status").select("*").eq("id", id).maybeSingle(),
-      supabase
-        .from("pm_records")
-        .select("*")
-        .eq("system_id", id)
-        .order("scheduled_date", { ascending: false }),
-      supabase.from("probes").select("*").eq("system_id", id).order("probe_serial"),
-    ]);
+  const [
+    { data: system, error: systemError },
+    { data: records },
+    { data: probeRows },
+    { data: batteryRow },
+  ] = await Promise.all([
+    supabase.from("system_pm_status").select("*").eq("id", id).maybeSingle(),
+    supabase
+      .from("pm_records")
+      .select("*")
+      .eq("system_id", id)
+      .order("scheduled_date", { ascending: false }),
+    supabase.from("probes").select("*").eq("system_id", id).order("probe_serial"),
+    supabase
+      .from("systems")
+      .select("bios_battery_last_replaced")
+      .eq("id", id)
+      .maybeSingle(),
+  ]);
 
   if (systemError || !system) {
     notFound();
@@ -30,7 +43,9 @@ export default async function SystemProfilePage({
   const row = system as SystemPmStatus;
   const pmRecords = (records ?? []) as PmRecord[];
   const probes = (probeRows ?? []) as Probe[];
+  const biosBatteryLastReplaced = batteryRow?.bios_battery_last_replaced ?? null;
   const overdue = isPmOverdue(row);
+  const batteryDue = isBiosBatteryDue(biosBatteryLastReplaced);
 
   return (
     <div className="space-y-8">
@@ -69,6 +84,17 @@ export default async function SystemProfilePage({
             value={formatDate(row.warranty_expiration)}
           />
           <Detail label="Assigned FSE" value={row.assigned_fse} />
+          <div className="flex items-center justify-between text-sm">
+            <dt className="text-slate-500">BIOS Battery Last Replaced</dt>
+            <dd className="flex items-center gap-2 text-slate-900">
+              {batteryDue && (
+                <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">
+                  Due
+                </span>
+              )}
+              {formatDate(biosBatteryLastReplaced) || "—"}
+            </dd>
+          </div>
         </Section>
 
         <Section title="Contract">

@@ -1,13 +1,22 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type { SystemPmStatus } from "@/lib/supabase/types";
-import { effectiveNextPmDue, isPmOverdue } from "@/lib/supabase/types";
+import {
+  effectiveNextPmDue,
+  isBiosBatteryDue,
+  isPmOverdue,
+} from "@/lib/supabase/types";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("system_pm_status")
-    .select("*");
+  const [{ data, error }, { data: batteryRows }] = await Promise.all([
+    supabase.from("system_pm_status").select("*"),
+    supabase.from("systems").select("id, bios_battery_last_replaced"),
+  ]);
+
+  const batteryBySystemId = new Map(
+    (batteryRows ?? []).map((row) => [row.id, row.bios_battery_last_replaced])
+  );
 
   const rows = (data ?? []) as SystemPmStatus[];
   const overdue = rows.filter(isPmOverdue);
@@ -34,6 +43,10 @@ export default async function DashboardPage() {
     );
   }).length;
 
+  const biosBatteriesDue = rows.filter((row) =>
+    isBiosBatteryDue(batteryBySystemId.get(row.id) ?? null)
+  ).length;
+
   return (
     <div className="space-y-8">
       <div>
@@ -59,6 +72,11 @@ export default async function DashboardPage() {
         <StatCard label="Under Contract" value={underContract} accent="text-slate-900" />
         <StatCard label="Not Under Contract" value={notUnderContract} accent="text-slate-900" />
         <StatCard label="PMs Due This Month" value={dueThisMonth} accent="text-slate-900" />
+        <StatCard
+          label="BIOS Batteries Due"
+          value={biosBatteriesDue}
+          accent={biosBatteriesDue > 0 ? "text-red-600" : "text-emerald-600"}
+        />
         {Array.from(statusCounts.entries())
           .slice(0, 2)
           .map(([status, count]) => (

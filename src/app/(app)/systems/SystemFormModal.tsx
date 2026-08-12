@@ -23,6 +23,7 @@ type FormState = {
   annual_contract_value: string;
   assigned_fse: string;
   notes: string;
+  bios_battery_last_replaced: string;
 };
 
 function toFormState(system: System | null): FormState {
@@ -41,6 +42,7 @@ function toFormState(system: System | null): FormState {
     annual_contract_value: system?.annual_contract_value?.toString() ?? "",
     assigned_fse: system?.assigned_fse ?? "",
     notes: system?.notes ?? "",
+    bios_battery_last_replaced: system?.bios_battery_last_replaced ?? "",
   };
 }
 
@@ -84,6 +86,7 @@ export default function SystemFormModal({
         : null,
       assigned_fse: form.assigned_fse || null,
       notes: form.notes || null,
+      bios_battery_last_replaced: form.bios_battery_last_replaced || null,
     };
 
     const { error } = system
@@ -220,6 +223,16 @@ export default function SystemFormModal({
               <input
                 value={form.assigned_fse}
                 onChange={(e) => update("assigned_fse", e.target.value)}
+                className="input"
+              />
+            </Field>
+            <Field label="BIOS Battery Last Replaced">
+              <input
+                type="date"
+                value={form.bios_battery_last_replaced}
+                onChange={(e) =>
+                  update("bios_battery_last_replaced", e.target.value)
+                }
                 className="input"
               />
             </Field>
